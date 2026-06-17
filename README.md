@@ -78,4 +78,4 @@ Este proyecto fue desarrollado como caso de estudio para explorar:
 - Algoritmos clásicos: Shunting-yard y evaluación de expresiones en RPN.
 - Análisis léxico básico (tokenización).
 - Validación sintáctica de expresiones matemáticas.
-- Java 26 con características _preview_.
+- Java 26 con características.

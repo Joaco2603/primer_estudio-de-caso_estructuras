@@ -26,5 +26,7 @@ bin/
 ### VS Code ###
 .vscode/
 
+AGENTS.md
+
 ### Mac OS ###
 .DS_Store
