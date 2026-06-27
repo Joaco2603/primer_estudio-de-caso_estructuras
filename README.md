@@ -21,7 +21,7 @@ Operadores soportados: `+` (suma), `-` (resta), `*` (multiplicación), `/` (divi
 
 ```bash
 # Compilar
-javac --enable-preview --source 26 -d out src/Main.java
+javac --enable-preview --source 26 -d out src/*.java
 
 # Ejecutar
 java --enable-preview -cp out Main

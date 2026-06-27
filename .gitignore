@@ -28,5 +28,21 @@ bin/
 
 AGENTS.md
 
+### AI / Agent tooling ###
+.atl/
+.opencode/
+.aider*
+.cursor/
+.windsurf/
+.roo/
+.claude/
+.gemini/
+.kiro/
+tools/
+prompt.md
+prompts/
+**/*ai-generated*
+**/*generated-by-ai*
+
 ### Mac OS ###
 .DS_Store

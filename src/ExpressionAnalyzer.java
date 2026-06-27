@@ -1,8 +1,32 @@
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * Analyzes, validates, and evaluates arithmetic expressions in infix notation.
+ * <p>
+ * Provides four core capabilities:
+ * <ul>
+ *   <li><b>Tokenization</b> — breaks an expression string into tokens (numbers, variables, operators, parentheses)</li>
+ *   <li><b>Validation</b> — checks parentheses balance and overall expression structure grammar</li>
+ *   <li><b>Infix to Postfix</b> — converts infix expressions to Reverse Polish Notation using the Shunting-yard algorithm</li>
+ *   <li><b>Evaluation</b> — evaluates postfix expressions numerically, optionally resolving variables from a symbol map</li>
+ * </ul>
+ * <p>
+ * Operates on a custom {@link Pila} (stack) implementation to demonstrate
+ * linked-list-based stack operations throughout the analysis pipeline.
+ */
 final class ExpressionAnalyzer {
+    /**
+     * Validates that all parentheses in the expression are properly balanced.
+     * <p>
+     * Uses a {@link Pila} to track opening parentheses: each '(' is pushed,
+     * each ')' pops a matching '(' from the stack.
+     *
+     * @param expression the infix expression to validate
+     * @return a {@link ValidationResult} indicating whether parentheses are balanced
+     */
     ValidationResult validateParentheses(String expression) {
         List<Token> tokens = tokenize(expression);
         Pila stack = new Pila();
@@ -12,23 +36,30 @@ final class ExpressionAnalyzer {
                 stack.push('(');
             } else if (token.type() == TokenType.RIGHT_PAREN) {
                 if (stack.isEmpty()) {
-                    return ValidationResult.invalid("Invalid expression: closing parenthesis without matching opening parenthesis.");
+                    return ValidationResult.invalid("Expresión inválida: hay un paréntesis de cierre sin su paréntesis de apertura correspondiente.");
                 }
                 stack.pop();
             }
         }
 
         if (!stack.isEmpty()) {
-            return ValidationResult.invalid("Invalid expression: there are unmatched opening parentheses.");
+            return ValidationResult.invalid("Expresión inválida: hay paréntesis de apertura sin cerrar.");
         }
 
-        return ValidationResult.valid("Parentheses are balanced.");
+        return ValidationResult.valid("Los paréntesis están balanceados.");
     }
 
+    /**
+     * Validates the full grammatical structure of an expression, including
+     * operator placement, operand ordering, and parentheses grouping.
+     *
+     * @param expression the infix expression to validate
+     * @return a {@link ValidationResult} describing whether the structure is valid
+     */
     ValidationResult validateExpression(String expression) {
         List<Token> tokens = tokenize(expression);
         if (tokens.isEmpty()) {
-            return ValidationResult.invalid("Invalid expression: empty input.");
+            return ValidationResult.invalid("Expresión inválida: la entrada está vacía.");
         }
 
         Pila parentheses = new Pila();
@@ -39,7 +70,7 @@ final class ExpressionAnalyzer {
 
             if (token.type() == TokenType.NUMBER || token.type() == TokenType.VARIABLE) {
                 if (!expectingOperand) {
-                    return ValidationResult.invalid("Invalid expression: two operands cannot appear together.");
+                    return ValidationResult.invalid("Expresión inválida: no pueden aparecer dos operandos seguidos.");
                 }
                 expectingOperand = false;
                 continue;
@@ -47,7 +78,7 @@ final class ExpressionAnalyzer {
 
             if (token.type() == TokenType.LEFT_PAREN) {
                 if (!expectingOperand) {
-                    return ValidationResult.invalid("Invalid expression: missing operator before '('.");
+                    return ValidationResult.invalid("Expresión inválida: falta un operador antes de '('.");
                 }
                 parentheses.push('(');
                 expectingOperand = true;
@@ -56,10 +87,10 @@ final class ExpressionAnalyzer {
 
             if (token.type() == TokenType.RIGHT_PAREN) {
                 if (expectingOperand) {
-                    return ValidationResult.invalid("Invalid expression: empty group or operator before ')'.");
+                    return ValidationResult.invalid("Expresión inválida: hay un grupo vacío o un operador antes de ')'.");
                 }
                 if (parentheses.isEmpty()) {
-                    return ValidationResult.invalid("Invalid expression: closing parenthesis without matching opening parenthesis.");
+                    return ValidationResult.invalid("Expresión inválida: hay un paréntesis de cierre sin su paréntesis de apertura correspondiente.");
                 }
                 parentheses.pop();
                 expectingOperand = false;
@@ -68,26 +99,37 @@ final class ExpressionAnalyzer {
 
             if (token.type() == TokenType.OPERATOR) {
                 if (expectingOperand) {
-                    return ValidationResult.invalid("Invalid expression: operator found where an operand was expected.");
+                    return ValidationResult.invalid("Expresión inválida: se encontró un operador donde se esperaba un operando.");
                 }
                 if (i == tokens.size() - 1) {
-                    return ValidationResult.invalid("Invalid expression: cannot end with an operator.");
+                    return ValidationResult.invalid("Expresión inválida: no puede terminar con un operador.");
                 }
                 expectingOperand = true;
             }
         }
 
         if (expectingOperand) {
-            return ValidationResult.invalid("Invalid expression: expression cannot end with an operator.");
+            return ValidationResult.invalid("Expresión inválida: no puede terminar con un operador.");
         }
 
         if (!parentheses.isEmpty()) {
-            return ValidationResult.invalid("Invalid expression: there are unmatched opening parentheses.");
+            return ValidationResult.invalid("Expresión inválida: hay paréntesis de apertura sin cerrar.");
         }
 
-        return ValidationResult.valid("Expression structure is valid.");
+        return ValidationResult.valid("La estructura de la expresión es válida.");
     }
 
+    /**
+     * Converts an infix expression to postfix notation (Reverse Polish Notation)
+     * using the Shunting-yard algorithm.
+     * <p>
+     * Operands are appended directly to the output; operators are managed on a
+     * {@link Pila} according to precedence and associativity rules.
+     *
+     * @param expression the infix expression to convert
+     * @return the expression in postfix notation, tokens separated by spaces
+     * @throws IllegalArgumentException if the expression is invalid
+     */
     String toPostfix(String expression) {
         ValidationResult result = validateExpression(expression);
         if (!result.valid()) {
@@ -107,7 +149,7 @@ final class ExpressionAnalyzer {
                         output.add(String.valueOf(operators.pop()));
                     }
                     if (operators.isEmpty()) {
-                        throw new IllegalArgumentException("Invalid expression: mismatched parentheses.");
+                        throw new IllegalArgumentException("Expresión inválida: los paréntesis no coinciden.");
                     }
                     operators.pop();
                 }
@@ -129,7 +171,7 @@ final class ExpressionAnalyzer {
         while (!operators.isEmpty()) {
             char top = operators.pop();
             if (top == '(') {
-                throw new IllegalArgumentException("Invalid expression: mismatched parentheses.");
+                throw new IllegalArgumentException("Expresión inválida: los paréntesis no coinciden.");
             }
             output.add(String.valueOf(top));
         }
@@ -137,16 +179,33 @@ final class ExpressionAnalyzer {
         return String.join(" ", output);
     }
 
+    /**
+     * Evaluates a numeric expression (no variables allowed).
+     *
+     * @param expression the infix expression to evaluate
+     * @return the numeric result
+     * @throws IllegalArgumentException if the expression contains variables,
+     *                                  is invalid, or contains a division by zero
+     */
     double evaluateExpression(String expression) {
         List<Token> tokens = tokenize(expression);
         if (tokens.stream().anyMatch(token -> token.type() == TokenType.VARIABLE)) {
-            throw new IllegalArgumentException("Evaluation requires a numeric expression without variables.");
+            throw new IllegalArgumentException("La evaluación requiere una expresión numérica sin variables.");
         }
 
         String postfix = toPostfix(expression);
         return evaluatePostfix(postfix);
     }
 
+    /**
+     * Generates a step-by-step trace of the infix-to-postfix conversion,
+     * showing the token being processed, the action taken, and the state of
+     * both the operator stack and the output queue after each step.
+     *
+     * @param expression the infix expression to trace
+     * @return a list of formatted trace lines
+     * @throws IllegalArgumentException if the expression is invalid
+     */
     List<String> traceInfixToPostfix(String expression) {
         ValidationResult result = validateExpression(expression);
         if (!result.valid()) {
@@ -158,25 +217,25 @@ final class ExpressionAnalyzer {
         List<String> output = new ArrayList<>();
         List<String> trace = new ArrayList<>();
 
-        trace.add("Tracing infix to postfix conversion:");
+        trace.add("Trazando la conversión de infijo a postfijo:");
 
         for (Token token : tokens) {
             String action;
             switch (token.type()) {
                 case NUMBER, VARIABLE -> {
                     output.add(token.text());
-                    action = "append operand";
+                    action = "agregar operando";
                 }
                 case LEFT_PAREN -> {
                     operators.push('(');
-                    action = "push '('";
+                    action = "apilar '('";
                 }
                 case RIGHT_PAREN -> {
                     while (!operators.isEmpty() && operators.peek() != '(') {
                         output.add(String.valueOf(operators.pop()));
                     }
                     operators.pop();
-                    action = "pop until '('";
+                    action = "desapilar hasta '('";
                 }
                 case OPERATOR -> {
                     char current = token.text().charAt(0);
@@ -189,25 +248,47 @@ final class ExpressionAnalyzer {
                         }
                     }
                     operators.push(current);
-                    action = "push operator";
+                    action = "apilar operador";
                 }
-                default -> throw new IllegalStateException("Unexpected token type.");
+                default -> throw new IllegalStateException("Tipo de token inesperado.");
             }
 
-            trace.add(String.format("token=%s | action=%s | stack=%s | output=%s",
+            trace.add(String.format("token=%s | acción=%s | pila=%s | salida=%s",
                     token.text(), action, operators.snapshot(), String.join(" ", output)));
         }
 
         while (!operators.isEmpty()) {
             output.add(String.valueOf(operators.pop()));
-            trace.add(String.format("finalize | stack=%s | output=%s", operators.snapshot(), String.join(" ", output)));
+            trace.add(String.format("finalizar | pila=%s | salida=%s", operators.snapshot(), String.join(" ", output)));
         }
 
-        trace.add("Postfix result: " + String.join(" ", output));
+        trace.add("Resultado postfijo: " + String.join(" ", output));
         return trace;
     }
 
+    /**
+     * Evaluates an arithmetic expression with variable substitution.
+     * <p>
+     * Variables in the expression are resolved using the provided symbol map.
+     * Throws an {@link IllegalArgumentException} if a variable has no assigned value.
+     *
+     * @param expression the infix expression to evaluate (may contain variables)
+     * @param variables  a map of variable names to their numeric values
+     * @return the numeric result of the expression
+     * @throws IllegalArgumentException if the expression is invalid, contains
+     *                                  an undefined variable, or contains a
+     *                                  division by zero
+     */
+    double evaluateExpression(String expression, Map<String, Double> variables) {
+        String postfix = toPostfix(expression);
+        return evaluatePostfix(postfix, variables);
+    }
+
     private double evaluatePostfix(String postfix) {
+        return evaluatePostfix(postfix, Map.of());
+    }
+
+    private double evaluatePostfix(String postfix, Map<String, Double> variables) {
         ArrayDeque<Double> stack = new ArrayDeque<>();
         String[] tokens = postfix.split("\\s+");
 
@@ -223,7 +304,7 @@ final class ExpressionAnalyzer {
 
             if (token.length() == 1 && isOperator(token.charAt(0))) {
                 if (stack.size() < 2) {
-                    throw new IllegalArgumentException("Invalid postfix expression.");
+                    throw new IllegalArgumentException("Expresión postfija inválida.");
                 }
                 double right = stack.pop();
                 double left = stack.pop();
@@ -231,11 +312,17 @@ final class ExpressionAnalyzer {
                 continue;
             }
 
-            throw new IllegalArgumentException("Evaluation requires numeric operands only.");
+            // Token is a variable — look it up in the symbol map
+            if (variables.containsKey(token)) {
+                stack.push(variables.get(token));
+                continue;
+            }
+
+            throw new IllegalArgumentException("Variable no definida: " + token);
         }
 
         if (stack.size() != 1) {
-            throw new IllegalArgumentException("Invalid postfix expression.");
+            throw new IllegalArgumentException("Expresión postfija inválida.");
         }
 
         return stack.pop();
@@ -248,12 +335,12 @@ final class ExpressionAnalyzer {
             case '*' -> left * right;
             case '/' -> {
                 if (right == 0.0d) {
-                    throw new IllegalArgumentException("Division by zero.");
+                    throw new IllegalArgumentException("División entre cero.");
                 }
                 yield left / right;
             }
             case '^' -> Math.pow(left, right);
-            default -> throw new IllegalArgumentException("Unsupported operator: " + operator);
+            default -> throw new IllegalArgumentException("Operador no soportado: " + operator);
         };
     }
 
@@ -283,7 +370,7 @@ final class ExpressionAnalyzer {
 
                 String number = input.substring(start, index);
                 if (number.equals(".") || number.endsWith(".")) {
-                    throw new IllegalArgumentException("Invalid number token: " + number);
+                    throw new IllegalArgumentException("Token numérico inválido: " + number);
                 }
                 tokens.add(new Token(number, TokenType.NUMBER));
                 continue;
@@ -322,7 +409,7 @@ final class ExpressionAnalyzer {
                 continue;
             }
 
-            throw new IllegalArgumentException("Unsupported character: " + ch);
+            throw new IllegalArgumentException("Carácter no soportado: " + ch);
         }
 
         return tokens;
