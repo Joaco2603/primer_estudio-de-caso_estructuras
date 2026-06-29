@@ -2,9 +2,9 @@
  * A LIFO (Last-In, First-Out) stack implementation using a singly linked list
  * of {@link Nodo} nodes.
  * <p>
- * Supports standard stack operations: {@link #push(char)}, {@link #pop()},
- * {@link #peek()}, and utility methods like {@link #snapshot()} to inspect
- * the current stack state for tracing and debugging.
+ * Supports stack operations for operators and numeric values used by the
+ * expression analyzer, plus {@link #snapshot()} to inspect the current stack
+ * state for tracing and debugging.
  * <p>
  * All operations run in O(1) time except {@link #snapshot()} which runs
  * in O(n) to traverse and display the full stack.
@@ -19,6 +19,19 @@ final class Pila {
      * @param value the character to push
      */
     void push(char value) {
+        pushValue(String.valueOf(value));
+    }
+
+    /**
+     * Pushes a numeric value onto the top of the stack.
+     *
+     * @param value the numeric value to push
+     */
+    void push(double value) {
+        pushValue(String.valueOf(value));
+    }
+
+    private void pushValue(String value) {
         Nodo node = new Nodo(value);
         node.setNext(top);
         top = node;
@@ -37,7 +50,24 @@ final class Pila {
             return '\0';
         }
 
-        char value = top.getValue();
+        char value = top.getValue().charAt(0);
+        top = top.getNext();
+        size--;
+        return value;
+    }
+
+    /**
+     * Removes and returns the numeric value at the top of the stack.
+     *
+     * @return the numeric value at the top of the stack
+     */
+    double popDouble() {
+        if (isEmpty()) {
+            System.out.println("La pila está vacía.");
+            return 0.0d;
+        }
+
+        double value = Double.parseDouble(top.getValue());
         top = top.getNext();
         size--;
         return value;
@@ -54,7 +84,7 @@ final class Pila {
             System.out.println("La pila está vacía.");
             return '\0';
         }
-        return top.getValue();
+        return top.getValue().charAt(0);
     }
 
     /**

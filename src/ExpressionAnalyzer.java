@@ -1,4 +1,3 @@
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -261,7 +260,7 @@ final class ExpressionAnalyzer {
     }
 
     private double evaluatePostfix(String postfix) {
-        ArrayDeque<Double> stack = new ArrayDeque<>();
+        Pila stack = new Pila();
         String[] tokens = postfix.split("\\s+");
 
         for (String token : tokens) {
@@ -278,8 +277,8 @@ final class ExpressionAnalyzer {
                 if (stack.size() < 2) {
                     throw new IllegalArgumentException("Expresión postfija inválida.");
                 }
-                double right = stack.pop();
-                double left = stack.pop();
+                double right = stack.popDouble();
+                double left = stack.popDouble();
                 stack.push(applyOperator(left, right, token.charAt(0)));
                 continue;
             }
@@ -291,7 +290,7 @@ final class ExpressionAnalyzer {
             throw new IllegalArgumentException("Expresión postfija inválida.");
         }
 
-        return stack.pop();
+        return stack.popDouble();
     }
 
     private double resolveConstant(String name) {

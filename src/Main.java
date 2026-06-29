@@ -73,6 +73,10 @@ public class Main {
             System.out.println("No hay una expresión cargada.");
             return;
         }
-        action.accept(expression);
+        try {
+            action.accept(expression);
+        } catch (IllegalArgumentException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 }

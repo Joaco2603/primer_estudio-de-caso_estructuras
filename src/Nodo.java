@@ -1,28 +1,28 @@
 /**
  * Represents a single node in a singly linked list used by {@link Pila}.
  * <p>
- * Each node stores a character value and a reference to the next node,
+ * Each node stores a text value and a reference to the next node,
  * forming the backbone of the LIFO stack structure.
  */
 final class Nodo {
-    private final char value;
+    private final String value;
     private Nodo next;
 
     /**
-     * Creates a node with the given character value.
+     * Creates a node with the given value.
      *
-     * @param value the character to store in this node
+     * @param value the text to store in this node
      */
-    Nodo(char value) {
+    Nodo(String value) {
         this.value = value;
     }
 
     /**
-     * Returns the character stored in this node.
+     * Returns the text stored in this node.
      *
-     * @return the character value
+     * @return the text value
      */
-    char getValue() {
+    String getValue() {
         return value;
     }
 
