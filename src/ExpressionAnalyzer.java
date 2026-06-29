@@ -1,7 +1,6 @@
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Analyzes, validates, and evaluates arithmetic expressions in infix notation.
@@ -11,7 +10,7 @@ import java.util.Map;
  *   <li><b>Tokenization</b> — breaks an expression string into tokens (numbers, variables, operators, parentheses)</li>
  *   <li><b>Validation</b> — checks parentheses balance and overall expression structure grammar</li>
  *   <li><b>Infix to Postfix</b> — converts infix expressions to Reverse Polish Notation using the Shunting-yard algorithm</li>
- *   <li><b>Evaluation</b> — evaluates postfix expressions numerically, optionally resolving variables from a symbol map</li>
+ *   <li><b>Evaluation</b> — evaluates postfix expressions numerically, resolving supported constants directly</li>
  * </ul>
  * <p>
  * Operates on a custom {@link Pila} (stack) implementation to demonstrate
@@ -180,19 +179,14 @@ final class ExpressionAnalyzer {
     }
 
     /**
-     * Evaluates a numeric expression (no variables allowed).
+     * Evaluates a numeric expression, including supported constants.
      *
      * @param expression the infix expression to evaluate
      * @return the numeric result
-     * @throws IllegalArgumentException if the expression contains variables,
-     *                                  is invalid, or contains a division by zero
+     * @throws IllegalArgumentException if the expression is invalid, contains
+     *                                  an unknown constant, or contains a division by zero
      */
     double evaluateExpression(String expression) {
-        List<Token> tokens = tokenize(expression);
-        if (tokens.stream().anyMatch(token -> token.type() == TokenType.VARIABLE)) {
-            throw new IllegalArgumentException("La evaluación requiere una expresión numérica sin variables.");
-        }
-
         String postfix = toPostfix(expression);
         return evaluatePostfix(postfix);
     }
@@ -200,7 +194,7 @@ final class ExpressionAnalyzer {
     /**
      * Generates a step-by-step trace of the infix-to-postfix conversion,
      * showing the token being processed, the action taken, and the state of
-     * both the operator stack and the output queue after each step.
+     * both the operator stack and the output list after each step.
      *
      * @param expression the infix expression to trace
      * @return a list of formatted trace lines
@@ -266,29 +260,7 @@ final class ExpressionAnalyzer {
         return trace;
     }
 
-    /**
-     * Evaluates an arithmetic expression with variable substitution.
-     * <p>
-     * Variables in the expression are resolved using the provided symbol map.
-     * Throws an {@link IllegalArgumentException} if a variable has no assigned value.
-     *
-     * @param expression the infix expression to evaluate (may contain variables)
-     * @param variables  a map of variable names to their numeric values
-     * @return the numeric result of the expression
-     * @throws IllegalArgumentException if the expression is invalid, contains
-     *                                  an undefined variable, or contains a
-     *                                  division by zero
-     */
-    double evaluateExpression(String expression, Map<String, Double> variables) {
-        String postfix = toPostfix(expression);
-        return evaluatePostfix(postfix, variables);
-    }
-
     private double evaluatePostfix(String postfix) {
-        return evaluatePostfix(postfix, Map.of());
-    }
-
-    private double evaluatePostfix(String postfix, Map<String, Double> variables) {
         ArrayDeque<Double> stack = new ArrayDeque<>();
         String[] tokens = postfix.split("\\s+");
 
@@ -312,13 +284,7 @@ final class ExpressionAnalyzer {
                 continue;
             }
 
-            // Token is a variable — look it up in the symbol map
-            if (variables.containsKey(token)) {
-                stack.push(variables.get(token));
-                continue;
-            }
-
-            throw new IllegalArgumentException("Variable no definida: " + token);
+            stack.push(resolveConstant(token));
         }
 
         if (stack.size() != 1) {
@@ -326,6 +292,14 @@ final class ExpressionAnalyzer {
         }
 
         return stack.pop();
+    }
+
+    private double resolveConstant(String name) {
+        return switch (name) {
+            case "pi" -> Math.PI;
+            case "e" -> Math.E;
+            default -> throw new IllegalArgumentException("Constante no definida: " + name);
+        };
     }
 
     private double applyOperator(double left, double right, char operator) {

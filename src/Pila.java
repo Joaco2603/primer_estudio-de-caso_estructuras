@@ -33,7 +33,8 @@ final class Pila {
      */
     char pop() {
         if (isEmpty()) {
-            throw new IllegalStateException("The stack is empty.");
+            System.out.println("La pila está vacía.");
+            return '\0';
         }
 
         char value = top.getValue();
@@ -50,7 +51,8 @@ final class Pila {
      */
     char peek() {
         if (isEmpty()) {
-            throw new IllegalStateException("The stack is empty.");
+            System.out.println("La pila está vacía.");
+            return '\0';
         }
         return top.getValue();
     }
